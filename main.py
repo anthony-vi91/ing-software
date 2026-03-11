@@ -14,7 +14,6 @@ def mostrar_menu():
 #Función agregar tarea
 def agregar_tarea():
     descripcion = input("Escribe la nueva tarea: ")
-    
     if descripcion:
         tarea = {
             'descripcion': descripcion,
@@ -44,21 +43,17 @@ def actualizar_tarea():
         print("No hay tareas para actualizar.")
         input("Presiona Enter para continuar...")
         return
-
     leer_tareas()
     try:
         indice = int(input("Número de tarea a actualizar: ")) - 1
-        
         if 0 <= indice < len(tareas):
             tarea = tareas[indice]
             nueva_descripcion = input("Nueva descripción (dejar vacío para no cambiar): ")
             nuevo_estado = input("Nuevo estado (1=Completada, 0=Pendiente, dejar vacío para no cambiar): ")
-            
             if nueva_descripcion:
                 tarea['descripcion'] = nueva_descripcion
             if nuevo_estado:
                 tarea['completada'] = (nuevo_estado == "1")
-            
             print("Tarea #" + str(indice + 1) + " actualizada.")
         else:
             print("Error: Índice inválido.")
@@ -72,11 +67,9 @@ def eliminar_tarea():
         print("No hay tareas para eliminar.")
         input("Presiona Enter para continuar...")
         return
-
     leer_tareas()
     try:
         indice = int(input("Número de tarea a eliminar: ")) - 1
-        
         if 0 <= indice < len(tareas):
             tarea_eliminada = tareas.pop(indice)
             print("Tarea '" + tarea_eliminada['descripcion'] + "' eliminada.")
@@ -92,7 +85,6 @@ def main():
         os.system("clear")  # Limpia pantalla (en Windows usa "cls")
         mostrar_menu()
         opcion = input("Seleccione una opción: ")
-        
         if opcion == "1":
             leer_tareas()
         elif opcion == "2":
