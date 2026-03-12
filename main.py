@@ -1,100 +1,222 @@
 import os
+from datetime import datetime
+
 tareas = []
+id_counter = 1
 
-#Creación visual del menú principal
+# Funciones auxiliares
+def limpiar_pantalla():
+    os.system('cls' if os.name == 'nt' else 'clear')
+
+def obtener_fecha_actual():
+    return datetime.now().strftime("%Y-%m-%d %H:%M")
+
+def validar_prioridad(prioridad):
+    return prioridad in ['Alta', 'Media', 'Baja']
+
+#Menu Principal
 def mostrar_menu():
-    print("\n---- GESTOR DE TAREAS ----")
-    print("1. Ver tareas")
-    print("2. Agregar tarea")
-    print("3. Actualizar tarea")
-    print("4. Eliminar tarea")
-    print("5. Salir")
-    print("--------------------------")
+    limpiar_pantalla()
+    print("=== GESTOR DE TAREAS PERSONALES ===")
+    print("1. Agregar nueva tarea")
+    print("2. Ver todas las tareas")
+    print("3. Ver solo tareas pendientes")
+    print("4. Ver solo tareas completadas")
+    print("5. Marcar tarea como completada")
+    print("6. Editar tarea")
+    print("7. Eliminar tarea")
+    print("8. Buscar tareas")
+    print("9. Salir del programa")
 
-#Función agregar tarea
+#Funciones de gestion de tareas
 def agregar_tarea():
-    descripcion = input("Escribe la nueva tarea: ")
-    if descripcion:
-        tarea = {
-            'descripcion': descripcion,
-            'completada': False
-        }
-        tareas.append(tarea)
-        print(f"Tarea '{descripcion}' agregada correctamente.")
-    else:
-        print("Error: La descripción no puede estar vacía.")
-    input("Presiona Enter para continuar...")
-
-#Función para visualizar tareas
-def leer_tareas():
-    print("\n--- LISTA DE TAREAS ---")
-    if not tareas:
-        print("No hay tareas pendientes.")
-    else:
-        for i, tarea in enumerate(tareas, 1):
-            estado = "Completada" if tarea['completada'] else "Pendiente"
-            print(f"{i}. [{estado}] {tarea['descripcion']}")
-    print("-" * 30)
-    input("Presiona Enter para continuar...")
-
-#Función para actualizar la tarea
-def actualizar_tarea():
-    if not tareas:
-        print("No hay tareas para actualizar.")
+    global id_counter
+    print("\n--- AGREGAR NUEVA TAREA ---")
+    titulo = input("Título de la tarea: ").strip()
+    if not titulo:
+        print("Error: El título no puede estar vacío.")
         input("Presiona Enter para continuar...")
         return
-    leer_tareas()
-    try:
-        indice = int(input("Número de tarea a actualizar: ")) - 1
-        if 0 <= indice < len(tareas):
-            tarea = tareas[indice]
-            nueva_descripcion = input("Nueva descripción (dejar vacío para no cambiar): ")
-            nuevo_estado = input("Nuevo estado (1=Completada, 0=Pendiente, dejar vacío para no cambiar): ")
-            if nueva_descripcion:
-                tarea['descripcion'] = nueva_descripcion
-            if nuevo_estado:
-                tarea['completada'] = (nuevo_estado == "1")
-            print("Tarea #" + str(indice + 1) + " actualizada.")
-        else:
-            print("Error: Índice inválido.")
-    except ValueError:
-        print("Error: Debes ingresar un número válido.")
+
+    descripcion = input("Descripción (Opcional): ").strip()
+    while True:
+        prioridad = input("Prioridad (Alta/Media/Baja): ").strip().capitalize()
+        if validar_prioridad(prioridad):
+            break
+        print("Error: Prioridad inválida. Usa Alta, Media o Baja.")
+
+    fecha_limite = input("Fecha límite (YYYY-MM-DD) o dejar vacío: ").strip()
+    if not fecha_limite:
+        fecha_limite = "Sin límite"
+
+    nueva_tarea = {
+        'id': id_counter,
+        'titulo': titulo,
+        'descripcion': descripcion,
+        'prioridad': prioridad,
+        'estado': 'Pendiente',
+        'fecha_creacion': obtener_fecha_actual(),
+        'fecha_limite': fecha_limite
+    }
+
+    tareas.append(nueva_tarea)
+    id_counter += 1
+    print(f"\n Tarea #{nueva_tarea['id']} agregada correctamente.")
     input("Presiona Enter para continuar...")
 
-#Función eliminar tarea
+def mostrar_lista(lista_tareas, titulo_filtro="TAREAS"):
+
+    limpiar_pantalla()
+    print(f"\n--- {titulo_filtro} ---")
+    
+    if not lista_tareas:
+        print("No hay tareas registradas.")
+    else:
+        print(f"{'ID':<5} {'TÍTULO':<25} {'PRIORIDAD':<10} {'ESTADO':<12} {'LÍMITE':<15}")
+        print("-" * 70)
+        for tarea in lista_tareas:
+            print(f"{tarea['id']:<5} {tarea['titulo']:<25} {tarea['prioridad']:<10} {tarea['estado']:<12} {tarea['fecha_limite']:<15}")
+    print("-" * 70)
+    input("Presiona Enter para continuar...")
+
+def ver_todas():
+    mostrar_lista(tareas, "LISTA COMPLETA DE TAREAS")
+
+def ver_pendientes():
+    pendientes = [t for t in tareas if t['estado'] == 'Pendiente']
+    mostrar_lista(pendientes, "TAREAS PENDIENTES")
+
+def ver_completadas():
+    completadas = [t for t in tareas if t['estado'] == 'Completada']
+    mostrar_lista(completadas, "TAREAS COMPLETADAS")
+
+def marcar_completada():
+    if not tareas:
+        print("No hay tareas para marcar.")
+        input("Enter...")
+        return
+
+    mostrar_lista(tareas, "TAREAS")
+    try:
+        id_tarea = int(input("Ingresa el ID de la tarea a completar: "))
+        tarea = next((t for t in tareas if t['id'] == id_tarea), None)
+        
+        if tarea:
+            if tarea['estado'] == 'Completada':
+                print("Esta tarea ya está completada.")
+            else:
+                tarea['estado'] = 'Completada'
+                print(f"Tarea #{id_tarea} marcada como completada.")
+        else:
+            print("Error: ID de tarea no encontrado.")
+    except ValueError:
+        print("Error: Ingresa un número válido.")
+    input("Enter...")
+
+def editar_tarea():
+    if not tareas:
+        print("No hay tareas para editar.")
+        input("Enter...")
+        return
+
+    mostrar_lista(tareas, "TAREAS")
+    try:
+        id_tarea = int(input("Ingresa el ID de la tarea a editar: "))
+        tarea = next((t for t in tareas if t['id'] == id_tarea), None)
+        
+        if tarea:
+            print(f"\nEditando tarea: {tarea['titulo']}")
+            
+            nuevo_titulo = input("Nuevo título (dejar vacío para mantener): ").strip()
+            if nuevo_titulo:
+                tarea['titulo'] = nuevo_titulo
+
+            nueva_desc = input("Nueva descripción (dejar vacío para mantener): ").strip()
+            if nueva_desc:
+                tarea['descripcion'] = nueva_desc
+
+            nueva_prioridad = input("Nueva prioridad (Alta/Media/Baja) o vacío: ").strip().capitalize()
+            if nueva_prioridad and validar_prioridad(nueva_prioridad):
+                tarea['prioridad'] = nueva_prioridad
+
+            nueva_limite = input("Nueva fecha límite (YYYY-MM-DD) o vacío: ").strip()
+            if nueva_limite:
+                tarea['fecha_limite'] = nueva_limite
+
+            print("Tarea actualizada.")
+        else:
+            print("Error: ID de tarea no encontrado.")
+    except ValueError:
+        print("Error: Ingresa un número válido.")
+    input("Enter...")
+
 def eliminar_tarea():
     if not tareas:
         print("No hay tareas para eliminar.")
-        input("Presiona Enter para continuar...")
+        input("Enter...")
         return
-    leer_tareas()
-    try:
-        indice = int(input("Número de tarea a eliminar: ")) - 1
-        if 0 <= indice < len(tareas):
-            tarea_eliminada = tareas.pop(indice)
-            print("Tarea '" + tarea_eliminada['descripcion'] + "' eliminada.")
-        else:
-            print("Error: Índice inválido.")
-    except ValueError:
-        print("Error: Debes ingresar un número válido.")
-    input("Presiona Enter para continuar...")
 
-#Función principal (Bucle del programa)
+    mostrar_lista(tareas, "TAREAS")
+    try:
+        id_tarea = int(input("Ingresa el ID de la tarea a eliminar: "))
+        tarea = next((t for t in tareas if t['id'] == id_tarea), None)
+        
+        if tarea:
+            confirmacion = input(f"¿Estás seguro de eliminar '{tarea['titulo']}'? (s/n): ").lower()
+            if confirmacion == 's':
+                tareas.remove(tarea)
+                print("Tarea eliminada.")
+            else:
+                print("Eliminación cancelada.")
+        else:
+            print("Error: ID de tarea no encontrado.")
+    except ValueError:
+        print("Error: Ingresa un número válido.")
+    input("Enter...")
+
+def buscar_tareas():
+    if not tareas:
+        print("No hay tareas para buscar.")
+        input("Enter...")
+        return
+
+    print("\n--- BÚSQUEDA ---")
+    palabra_clave = input("Ingresa palabra clave (Título o Descripción): ").lower()
+    
+    resultados = [t for t in tareas if palabra_clave in t['titulo'].lower() or palabra_clave in t['descripcion'].lower()]
+    
+    if resultados:
+        print(f"\n Se encontraron {len(resultados)} resultado(s) encontrado(s):")
+        for tarea in resultados:
+            print(f"ID: {tarea['id']} | Título: {tarea['titulo']} | Estado: {tarea['estado']}")
+    else:
+        print("No se encontraron tareas con esa búsqueda.")
+    input("Enter...")
+
+# Funcion Principal
 def main():
     while True:
-        os.system("clear")  # Limpia pantalla (en Windows usa "cls")
         mostrar_menu()
-        opcion = input("Seleccione una opción: ")
+        opcion = input("Selecciona una opción: ")
+        
         if opcion == "1":
-            leer_tareas()
-        elif opcion == "2":
             agregar_tarea()
+        elif opcion == "2":
+            ver_todas()
         elif opcion == "3":
-            actualizar_tarea()
+            ver_pendientes()
         elif opcion == "4":
-            eliminar_tarea()
+            ver_completadas()
         elif opcion == "5":
-            print("ADIOS")
+            marcar_completada()
+        elif opcion == "6":
+            editar_tarea()
+        elif opcion == "7":
+            eliminar_tarea()
+        elif opcion == "8":
+            buscar_tareas()
+        elif opcion == "9":
+            print("ADIOS Hasta Luego")
             break
         else:
             print("Opción no válida.")
