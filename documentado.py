@@ -1,3 +1,9 @@
+"""
+Gestor de Tareas Personales.
+
+Una aplicación de línea de comandos para gestionar tareas personales
+"""
+
 import os
 from datetime import datetime
 
